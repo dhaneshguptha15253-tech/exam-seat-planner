@@ -2,11 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use('/api', require('./routes'));
+
+const dist = path.join(__dirname, '../client/dist');
+app.use(express.static(dist));
+app.get(/^\/(?!api).*/, (req, res, next) => res.sendFile(path.join(dist, 'index.html'), (e) => e && next()));
+
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 app.use((err, req, res, next) => {
   if (err.code === 11000) return res.status(409).json({ error: 'Duplicate blocked: that student or seat is already taken/registered.' });
